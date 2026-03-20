@@ -85,21 +85,21 @@ fn main() {
     let mut placeholder = String::new();
     let mut tokens = Tokens::new(&mut placeholder);
 
-    #[cfg(feature = "template")]
-    {
-        let s = tokens.next_string(); // String
-        let b = tokens.next_bytes(); // Vec<u8>
-        let n: usize = tokens.next();
-        let a: Vec<u32> = tokens.collect(n);
-        let i: BTreeSet<(usize, u32)> = (0..n).map(|i|
-            (i, tokens.next())
-        ).collect();
-    
-        debug!(s, b, n, a, i);
-    
-        let b0 = char::from_u32(b[0] as u32).unwrap(); // u8 -> char
-        let bs = String::from_utf8(b).unwrap(); // Vec<u8> -> String
-    
-        debug!(b0, bs);
-    }
+#[cfg(feature = "template")]
+{
+    let s = tokens.next_string(); // String
+    let b = tokens.next_bytes(); // Vec<u8>
+    let n: usize = tokens.next();
+    let a: Vec<u32> = tokens.collect(n);
+    let i: BTreeSet<(usize, u32)> = (0..n).map(|i|
+        (i, tokens.next())
+    ).collect();
+
+    debug!(s, b, n, a, i);
+
+    let b0 = char::from_u32(b[0] as u32).unwrap(); // u8 -> char
+    let bs = String::from_utf8(b).unwrap(); // Vec<u8> -> String
+
+    debug!(b0, bs);
+}
 }

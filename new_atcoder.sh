@@ -12,7 +12,12 @@ mkdir $p
     do
         pp=`echo "$p"_"$i"`
         #echo $pp
-        cargo new --edition 2021 $pp && cp -v ../template/rust-toolchain.toml $pp/ && cp -v ../template/src/main.rs $pp/src/
+        cargo new --edition 2024 $pp && \
+        cp -v ../template/rust-toolchain.toml $pp/ && \
+        cp -v ../template/src/main.rs $pp/src/ && \
+        mkdir -v $pp/.vscode && \
+        cp -v ../template/.vscode/settings.json $pp/.vscode/ && \
+        echo "---------- Created $pp"
     done
 )
 

@@ -8,16 +8,22 @@ p=`echo $1 | sed 's|/*$||'`
 mkdir $p
 (
     cd $p
+
     for i in ${@:2}
     do
-        pp=`echo "$p"_"$i"`
+        pp=$p"_"$i
         #echo $pp
-        cargo new --edition 2024 $pp && \
-        cp -v ../template/rust-toolchain.toml $pp/ && \
-        cp -v ../template/src/main.rs $pp/src/ && \
-        mkdir -v $pp/.vscode && \
-        cp -v ../template/.vscode/settings.json $pp/.vscode/ && \
+
+        cargo new --edition 2024 $pp
+        cp ../template/rust-toolchain.toml $pp/
+        cp ../template/src/main.rs $pp/src/
         echo "---------- Created $pp"
+
+        pps=$pps'{"path": "'$pp'"},'
+        #echo $pps
     done
+
+    #echo $pps
+    cat ../template/template.code-workspace | sed "s/{.*path.*,/$pps/g" > $p.code-workspace
 )
 

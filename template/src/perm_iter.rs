@@ -26,7 +26,7 @@ impl PermIter
         PermIter {n, k}
     }
 
-    fn iter(&self) -> IterPerm {
+    fn iter(&self) -> IterPerm<'_> {
         let n_p_k = (0..self.k).collect();
         let free = (self.k..self.n).collect();
         IterPerm {

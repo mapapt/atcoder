@@ -23,7 +23,7 @@ impl CombIter
         CombIter {n, k}
     }
 
-    fn iter(&self) -> IterComb {
+    fn iter(&self) -> IterComb<'_> {
         let n_c_k = (0..self.k).collect();
         IterComb {
             comb: &self,

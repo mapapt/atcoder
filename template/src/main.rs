@@ -1,4 +1,4 @@
-use std::prelude::rust_2021::*;
+use std::prelude::rust_2024::*;
 use std::io::prelude::*;
 
 #[allow(unused_imports)]

@@ -121,73 +121,88 @@ fn main() {
     debug!(ss);
     debug!(start);
 
-    let mut vis = BTreeSet::new();
+    let mut found = None;
+    let mut vis = HashMap::new();
     let mut q = VecDeque::new();
-    q.push_front((start.0, start.1, VecDeque::new(), 'S'));
-    while let Some((i, j, mut path, dir)) = q.pop_front() {
-        if !vis.contains(&(i, j, dir)) {
-            if dir != 'S' {
-                path.push_back(dir);
-            }
+    if start.0 > 0 {
+        q.push_front(('S', start.0, start.1, 'U', start.0 - 1, start.1));
+    }
+    if start.1 > 0 {
+        q.push_front(('S', start.0, start.1, 'L', start.0, start.1 - 1));
+    }
+    if start.0 < h - 1 {
+        q.push_front(('S', start.0, start.1, 'D', start.0 + 1, start.1));
+    }
+    if start.1 < w - 1 {
+        q.push_front(('S', start.0, start.1, 'R', start.0, start.1 + 1));
+    }
+    while let Some((pd, pi, pj, d, i, j)) = q.pop_front() {
+        if !vis.contains_key(&(d, i, j)) {
+            vis.insert((d, i, j), (pd, pi, pj));
             match ss[i][j] {
                 '.' => {
-                    vis.insert((i, j, 'U'));
-                    vis.insert((i, j, 'L'));
-                    vis.insert((i, j, 'D'));
-                    vis.insert((i, j, 'R'));
                     if i > 0 {
-                        q.push_front((i - 1, j, path.clone(), 'U'));
+                        q.push_front((d, i, j, 'U', i - 1, j));
                     }
                     if j > 0 {
-                        q.push_front((i, j - 1, path.clone(), 'L'));
+                        q.push_front((d, i, j, 'L', i, j - 1));
                     }
                     if i < h - 1 {
-                        q.push_front((i + 1, j, path.clone(), 'D'));
+                        q.push_front((d, i, j, 'D', i + 1, j));
                     }
                     if j < w - 1 {
-                        q.push_front((i, j + 1, path.clone(), 'R'));
+                        q.push_front((d, i, j, 'R', i, j + 1));
                     }
                 },
                 'o' => {
-                    vis.insert((i, j, dir));
-                    if dir == 'U' && i > 0 {
-                        q.push_front((i - 1, j, path.clone(), 'U'));
+                    if d == 'U' && i > 0 {
+                        q.push_front((d, i, j, 'U', i - 1, j));
                     }
-                    if dir == 'L' && j > 0 {
-                        q.push_front((i, j - 1, path.clone(), 'L'));
+                    if d == 'L' && j > 0 {
+                        q.push_front((d, i, j, 'L', i, j - 1));
                     }
-                    if dir == 'D' && i < h - 1 {
-                        q.push_front((i + 1, j, path.clone(), 'D'));
+                    if d == 'D' && i < h - 1 {
+                        q.push_front((d, i, j, 'D', i + 1, j));
                     }
-                    if dir == 'R' && j < w - 1 {
-                        q.push_front((i, j + 1, path.clone(), 'R'));
+                    if d == 'R' && j < w - 1 {
+                        q.push_front((d, i, j, 'R', i, j + 1));
                     }
                 },
                 'x' => {
-                    vis.insert((i, j, dir));
-                    if dir != 'U' && i > 0 {
-                        q.push_front((i - 1, j, path.clone(), 'U'));
+                    if d != 'U' && i > 0 {
+                        q.push_front((d, i, j, 'U', i - 1, j));
                     }
-                    if dir != 'L' && j > 0 {
-                        q.push_front((i, j - 1, path.clone(), 'L'));
+                    if d != 'L' && j > 0 {
+                        q.push_front((d, i, j, 'L', i, j - 1));
                     }
-                    if dir != 'D' && i < h - 1 {
-                        q.push_front((i + 1, j, path.clone(), 'D'));
+                    if d != 'D' && i < h - 1 {
+                        q.push_front((d, i, j, 'D', i + 1, j));
                     }
-                    if dir != 'R' && j < w - 1 {
-                        q.push_front((i, j + 1, path.clone(), 'R'));
+                    if d != 'R' && j < w - 1 {
+                        q.push_front((d, i, j, 'R', i, j + 1));
                     }
                 },
                 'G' => {
-                    io.puty(true);
-                    for c in path {
-                        print!("{c}");
-                    }
-                    return;
+                    found = Some((d, i, j));
+                    break;
                 },
                 _ => {}
             }
         }
     }
-    io.puty(false);
+    if let Some((mut d, mut i, mut j)) = found {
+        io.puty(true);
+        let mut path = String::new();
+        while d != 'S' {
+            path.push(d);
+            (d, i, j) = vis[&(d, i, j)];
+        }
+        for c in path.chars().rev() {
+            print!("{c}");
+        }
+        println!();
+    }
+    else {
+        io.puty(false);
+    }
 }

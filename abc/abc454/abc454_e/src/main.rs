@@ -109,24 +109,28 @@ fn sub(v: &mut HashSet<(usize, usize)>, h: usize, w:usize, a:usize, b:usize, i:u
         if i > 0 {
             if let Some(mut path) = sub(v, h, w, a, b, i - 1, j, path.clone()) {
                 path.push('U');
+                v.remove(&(i, j));
                 return Some(path);
             }
         }
         if j > 0 {
             if let Some(mut path) = sub(v, h, w, a, b, i, j - 1, path.clone()) {
                 path.push('L');
+                v.remove(&(i, j));
                 return Some(path);
             }
         }
         if i < h - 1 {
             if let Some(mut path) = sub(v, h, w, a, b, i + 1, j, path.clone()) {
                 path.push('D');
+                v.remove(&(i, j));
                 return Some(path);
             }
         }
         if j < w - 1 {
             if let Some(mut path) = sub(v, h, w, a, b, i, j + 1, path.clone()) {
                 path.push('R');
+                v.remove(&(i, j));
                 return Some(path);
             }
         }
@@ -149,7 +153,7 @@ fn main() {
         let mut w = n;
         let mut a = a - 1;
         let mut b = b - 1;
-        let cu = if a > 2 {
+        let cu = if a >= 3 {
             let c = (a - 1) / 2;
             let c = c * 2;
             a -= c;
@@ -159,7 +163,7 @@ fn main() {
         else {
             (0, 0)
         };
-        let cl = if b > 2 {
+        let cl = if b >= 3 {
             let c = (b - 1) / 2;
             let c = c * 2;
             b -= c;
@@ -169,8 +173,8 @@ fn main() {
         else {
             (0, 0)
         };
-        let cd = if a + 3 < h {
-            let c = (h - a - 1) / 2;
+        let cd = if a + 3 <= h - 1 {
+            let c = (h - 1 - a - 1) / 2;
             let c = c * 2;
             h -= c;
             (c, w)
@@ -178,8 +182,8 @@ fn main() {
         else {
             (0, 0)
         };
-        let cr = if b + 3 < w {
-            let c = (w - b - 1) / 2;
+        let cr = if b + 3 <= w - 1 {
+            let c = (w - 1 - b - 1) / 2;
             let c = c * 2;
             w -= c;
             (h, c)
@@ -192,7 +196,7 @@ fn main() {
         let mut v = HashSet::new();
         if let Some(path) = sub(&mut v, h, w, a, b, 0, 0, String::new()) {
             io.puty(true);
-            if cu.0 > 0 {
+            for _ in 0..cu.0 / 2 {
                 for _ in 0..cu.1 - 1 {
                     print!("R");
                 }
@@ -202,12 +206,12 @@ fn main() {
                 }
                 print!("D");
             }
-            if cl.0 > 0 {
-                for _ in 0..cl.1 - 1 {
+            for _ in 0..cl.1 / 2 {
+                for _ in 0..cl.0 - 1 {
                     print!("D");
                 }
                 print!("R");
-                for _ in 0..cl.1 - 1 {
+                for _ in 0..cl.0 - 1 {
                     print!("U");
                 }
                 print!("R");
@@ -215,7 +219,7 @@ fn main() {
             for c in path.chars().rev() {
                 print!("{c}");
             }
-            if cd.0 > 0 {
+            for _ in 0..cd.0 / 2 {
                 print!("D");
                 for _ in 0..cd.1 - 1 {
                     print!("L");
@@ -225,13 +229,13 @@ fn main() {
                     print!("R");
                 }
             }
-            if cr.0 > 0 {
+            for _ in 0..cr.1 / 2 {
                 print!("R");
-                for _ in 0..cr.1 - 1 {
+                for _ in 0..cr.0 - 1 {
                     print!("U");
                 }
                 print!("R");
-                for _ in 0..cr.1 - 1 {
+                for _ in 0..cr.0 - 1 {
                     print!("D");
                 }
             }

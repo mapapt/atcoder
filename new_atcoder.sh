@@ -1,6 +1,5 @@
 
 #echo $*
-#echo ${@:2}
 
 p=`echo $1 | sed 's|/*$||'`
 #echo $p
@@ -15,7 +14,9 @@ mkdir $p
     cp ../template/rust-toolchain.toml template/
     cp ../template/contests.md template/
 
-    for i in ${@:2}
+    shift 1
+    #echo $@
+    for i in $@
     do
         pp=$p"_"$i
         #echo $pp

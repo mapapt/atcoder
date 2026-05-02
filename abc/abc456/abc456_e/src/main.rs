@@ -99,6 +99,24 @@ impl<'a> StdIo<'a> {
 
 //#############################################################################
 
+fn sub(g: &Vec<HashSet<usize>>, cds: &mut BTreeSet<usize>, vis: &mut HashSet<usize>, cd: usize) -> bool {
+    cds.remove(&cd);
+    if vis.contains(&cd) {
+        true
+    }
+    else {
+        vis.insert(cd);
+        for &ncd in g[cd].iter() {
+            if sub(g, cds, vis, ncd) {
+                vis.remove(&cd);
+                return true;
+            }
+        }
+        vis.remove(&cd);
+        false
+    }
+}
+
 fn main() {
     let mut placeholder = String::new();
     let mut io = StdIo::new(&mut placeholder);
@@ -137,14 +155,14 @@ fn main() {
         }
         debug!(g2);
 
-        let mut scd = HashSet::new();
+        let mut cds = BTreeSet::new();
         let mut g = vec![HashSet::new(); n * w];
         for c in 0..n {
             for d in g2[c].iter() {
                 let nd = (d + 1) % w;
 
                 let cd = c * w + d;
-                scd.insert(cd);
+                cds.insert(cd);
                 for &nc in g1[c].iter() {
                     if g2[nc].contains(&nd) {
                         let ncd = nc * w + nd;
@@ -156,28 +174,12 @@ fn main() {
         debug!(g);
 
         let mut ok = false;
-        for &sscd in scd.iter() {
-            let mut vc = HashSet::new();
-            let mut v = HashSet::new();
-            let mut q = VecDeque::new();
-            q.push_back(sscd);
-            while let Some(p) = q.pop_back() {
-                if !v.contains(&p) {
-                    v.insert(p);
-                    let c = p / w;
-                    //debug!(p);
-                    vc.insert(c);
-                    for &ncd in g[p].iter() {
-                        q.push_back(ncd);
-                    }
-                }
-
-            }
-            debug!(vc);
-            if vc.len() == n {
+        while let Some(&scd) = cds.first() {
+            let mut vis = HashSet::new();
+            if sub(&g, &mut cds, &mut vis, scd) {
                 ok = true;
                 break;
-            };
+            }
         }
         io.puty(ok);
     }

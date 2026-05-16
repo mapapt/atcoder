@@ -103,48 +103,35 @@ fn main() {
     let mut placeholder = String::new();
     let mut io = StdIo::new(&mut placeholder);
 
-    let x: u64 = io.next();
+    let x: u32 = io.next();
     let q: usize = io.next();
-    let ab: Vec<(u64, u64)> = (0..q).map(|_| (io.next(), io.next())).collect();
-    debug!(ab);
 
-    let mut v = Vec::new();
-    v.push((x, 0));
-    for i in 0..q {
-        v.push((ab[i].0, i + 1));
-        v.push((ab[i].1, i + 1));
-    }
-    v.sort();
-    debug!(v);
+    let mut b0 = BinaryHeap::new();
+    let mut b1 = BinaryHeap::new();
+    b1.push(Reverse(x));
+    for _ in 0..q {
+        for _ in 0..2 {
+            let ab: u32 = io.next();
 
-    let mut m = HashMap::new();
-    for j in 0..v.len() {
-        m.insert(v[j], j);
-    }
-    debug!(m);
-
-    let mut s = BTreeSet::new();
-    let mut k = m[&(x, 0)];
-    s.insert(k);
-    for i in 0..q {
-        let ka = m[&(ab[i].0, i + 1)];
-        let kb = m[&(ab[i].1, i + 1)];
-        s.insert(ka);
-        s.insert(kb);
-        debug!(s);
-        let (ka, kb) = if ka < kb { (ka, kb) } else { (kb, ka) };
-        debug!(k, ka, kb);
-        if k < ka {
-            let kk = s.range(k + 1..).next().unwrap();
-            debug!(kk);
-            k = *kk;
+            let m = b1.peek().unwrap().0;
+            if ab < m {
+                b0.push(ab);
+            }
+            else {
+                b1.push(Reverse(ab));
+            }
         }
-        else if kb < k {
-            let kk = s.range(..=k - 1).last().unwrap();
-            debug!(kk);
-            k = *kk;
+
+        while b0.len() + 1 < b1.len() {
+            b0.push(b1.pop().unwrap().0);
         }
-        io.put(v[k].0);
+        while b0.len() + 1 > b1.len() {
+            b1.push(Reverse(b0.pop().unwrap()));
+        }
+        debug!(b0, b1);
+
+        let m = b1.peek().unwrap().0;
+        io.put(m);
         io.putn();
     }
 }

@@ -1,5 +1,3 @@
-use std::{collections::HashMap};
-
 //#############################################################################
 
 #[derive(Debug)]
@@ -15,8 +13,8 @@ struct SkipNode<T>
 struct SkipList<T>
 {
     max_level: usize,
-    nodes: HashMap<usize, SkipNode<T>>,
-    max_index: usize,
+    nodes: Vec<SkipNode<T>>,
+    free: Option<usize>,
     rnd_st: u64,
 }
 
@@ -33,17 +31,17 @@ impl<T: Ord + Copy + std::fmt::Debug> SkipList<T>
         let mut c_id = index;
         let mut sum_width = 0;
         loop {
-            if let Some(r_id) = self.nodes[&c_id].next {
-                let right = &self.nodes[&r_id];
+            if let Some(r_id) = self.nodes[c_id].next {
+                let right = &self.nodes[r_id];
                 if value >= right.value.unwrap() {
-                    sum_width += self.nodes[&c_id].width;
+                    sum_width += self.nodes[c_id].width;
                     c_id = r_id;
                 }
             }
             break;
         }
 
-        let (a_id, a_width) = if let Some(b_id) = self.nodes[&c_id].down {
+        let (a_id, a_width) = if let Some(b_id) = self.nodes[c_id].down {
             self.h_insert(b_id, value, level.max(1) - 1)
         }
         else {
@@ -51,32 +49,35 @@ impl<T: Ord + Copy + std::fmt::Debug> SkipList<T>
         };
 
         if level == 0 {
-            let cur = &self.nodes[&c_id];
-            let n_next = cur.next;
-            let n_width = cur.width + 1 - a_width;
-
-            self.max_index += 1;
-            self.nodes.insert(self.max_index, SkipNode {
+            let n_node = SkipNode {
                 value: Some(value),
-                width: n_width,
-                next: n_next,
+                width: self.nodes[c_id].width + 1 - a_width,
+                next: self.nodes[c_id].next,
                 down: a_id,
-            });
+            };
 
-            let cur_mut = self.nodes.get_mut(&c_id).unwrap();
-            cur_mut.next = Some(self.max_index);
-            cur_mut.width = a_width;
+            let n_id = if let Some(f_idx) = self.free {
+                self.free = self.nodes[f_idx].next;
+                self.nodes[f_idx] = n_node;
+                f_idx
+            }
+            else {
+                self.nodes.push(n_node);
+                self.nodes.len() - 1
+            };
+
+            self.nodes[c_id].next = Some(n_id);
+            self.nodes[c_id].width = a_width;
 
             //println!("---");
             //println!("{}: {:?}", c_id, cur_mut);
             //println!("{}: {:?}", self.max_index, self.nodes[&self.max_index]);
             //println!("{} {}", sum_width, a_width);
 
-            (Some(self.max_index), sum_width + a_width)
+            (Some(n_id), sum_width + a_width)
         }
         else {
-            let cur_mut = self.nodes.get_mut(&c_id).unwrap();
-            cur_mut.width += 1;
+            self.nodes[c_id].width += 1;
 
             //println!("{:?}", cur_mut);
             //println!("extend {}", sum_width + a_width);
@@ -87,9 +88,9 @@ impl<T: Ord + Copy + std::fmt::Debug> SkipList<T>
     //
     fn new() -> SkipList<T> {
         let max_level = 32;
-        let mut nodes = HashMap::new();
+        let mut nodes = Vec::new();
         for i in 0..=max_level {
-            nodes.insert(i, SkipNode {
+            nodes.push(SkipNode {
                 value: None,
                 width: 0,
                 next: None,
@@ -99,7 +100,7 @@ impl<T: Ord + Copy + std::fmt::Debug> SkipList<T>
         SkipList {
             max_level: max_level,
             nodes: nodes,
-            max_index: max_level,
+            free: None,
             rnd_st: 88172645463325252,
         }
     }
@@ -112,18 +113,25 @@ impl<T: Ord + Copy + std::fmt::Debug> SkipList<T>
         let (_, width) = self.h_insert(0, value, self.max_level.max(level) - level);
         width - 1
     }
-    // fn contains(&self, value: &T) -> Option<usize>
+    fn len(&self) -> usize {
+        let mut c_id = 0;
+        let mut sum_width = 0;
+        while let Some(r_id) = self.nodes[c_id].next {
+            sum_width += self.nodes[c_id].width;
+            c_id = r_id;
+        }
+        sum_width += self.nodes[c_id].width;
+        sum_width
+    }
+    // fn search(&self, x: &T) -> Result<usize, usize>
     // fn remove(&mut self, index: usize) -> T
-    // fn len(&self) -> usize
     // Debug
     // fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error>
     // Index
     // fn index(&self, index: I) -> &<Vec<T, A> as Index<I>>::Output
 
-    // fn clear(&mut self)
+    // fn remove<Q>(&mut self, value: &Q) -> bool
     // fn iter(&self) -> Iter<'_, T>
-    // fn partition_point<P>(&self, pred: P) -> usize
-    //   where P: FnMut(&T) -> bool
 }
 
 //#############################################################################
@@ -134,6 +142,8 @@ fn test_skip_list() {
     assert_eq!(s.insert(10), 0); // 10
     assert_eq!(s.insert(20), 1); // 10,20
     assert_eq!(s.insert(30), 2); // 10,20,30
-    assert_eq!(s.insert(35), 3);
+    assert_eq!(s.insert(40), 3); // 10,20,30,40
+    assert_eq!(s.insert(50), 4); // 10,20,30,40,50
+    assert_eq!(s.len(), 5);
     //assert_eq!(s.insert(15), 1);
 }

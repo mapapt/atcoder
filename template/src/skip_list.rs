@@ -32,15 +32,15 @@ impl<T: Ord + std::fmt::Debug> SkipList<T>
         //println!("{} {:?} {}", index, self.nodes[&index].value, level);
         let mut c_id = index;
         let mut sum_width = 0;
-        loop {
-            if let Some(r_id) = self.nodes[c_id].next {
-                let right = &self.nodes[r_id];
-                if &value >= right.value.as_ref().unwrap() {
-                    sum_width += self.nodes[c_id].width;
-                    c_id = r_id;
-                }
+        while let Some(r_id) = self.nodes[c_id].next {
+            let right = &self.nodes[r_id];
+            if &value >= right.value.as_ref().unwrap() {
+                sum_width += self.nodes[c_id].width;
+                c_id = r_id;
             }
-            break;
+            else {
+                break;
+            }
         }
 
         let (a_id, a_width) = if let Some(b_id) = self.nodes[c_id].down {
@@ -125,29 +125,42 @@ impl<T: Ord + std::fmt::Debug> SkipList<T>
         sum_width += self.nodes[c_id].width;
         sum_width
     }
-    /*
     fn search(&self, x: &T) -> Result<usize, usize> {
         let mut c_id = 0;
         let mut sum_width = 0;
         loop {
+            //println!("{}", c_id);
             if let Some(r_id) = self.nodes[c_id].next {
                 let right = &self.nodes[r_id];
-                if x >= &right.value.unwrap() {
+                if x >= right.value.as_ref().unwrap() {
                     sum_width += self.nodes[c_id].width;
                     c_id = r_id;
+                    continue;
                 }
             }
-            break;
+
+            if let Some(b_id) = self.nodes[c_id].down {
+                c_id = b_id;
+                continue;
+            }
+            else {
+                break;
+            }
         }
+
+        //println!("{}", c_id);
+        if let Some(y) = &self.nodes[c_id].value {
+            if x == y.as_ref() {
+                return Ok(sum_width - 1);
+            }
+        }
+        Err(sum_width)
     }
-    */
-    // fn remove(&mut self, index: usize) -> T
+    // fn remove(&mut self, index: usize) -> Option<T>
     // Debug
     // fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error>
     // Index
     // fn index(&self, index: I) -> &<Vec<T, A> as Index<I>>::Output
-
-    // fn remove<Q>(&mut self, value: &Q) -> bool
     // fn iter(&self) -> Iter<'_, T>
 }
 
@@ -162,5 +175,9 @@ fn test_skip_list() {
     assert_eq!(s.insert(40), 3); // 10,20,30,40
     assert_eq!(s.insert(50), 4); // 10,20,30,40,50
     assert_eq!(s.len(), 5);
-    //assert_eq!(s.insert(15), 1);
+    assert_eq!(s.search(&5), Err(0));
+    assert_eq!(s.search(&10), Ok(0));
+    assert_eq!(s.search(&25), Err(2));
+    assert_eq!(s.search(&50), Ok(4));
+    assert_eq!(s.search(&55), Err(5));
 }

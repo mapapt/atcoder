@@ -1,9 +1,11 @@
+use std::rc::Rc;
+
 //#############################################################################
 
 #[derive(Debug)]
 struct SkipNode<T>
 {
-    value: Option<T>,
+    value: Option<Rc<T>>,
     width: usize,
     next: Option<usize>,
     down: Option<usize>,
@@ -14,11 +16,11 @@ struct SkipList<T>
 {
     max_level: usize,
     nodes: Vec<SkipNode<T>>,
-    free: Option<usize>,
+    free_head: Option<usize>,
     rnd_st: u64,
 }
 
-impl<T: Ord + Copy + std::fmt::Debug> SkipList<T>
+impl<T: Ord + std::fmt::Debug> SkipList<T>
 {
     fn h_xorshift64(state: u64) -> u64 {
         let state = state ^ (state << 13);
@@ -26,14 +28,14 @@ impl<T: Ord + Copy + std::fmt::Debug> SkipList<T>
         let state = state ^ (state << 17);
         state
     }
-    fn h_insert(&mut self, index: usize, value: T, level: usize) -> (Option<usize>, usize) {
+    fn h_insert(&mut self, index: usize, value: Rc<T>, level: usize) -> (Option<usize>, usize) {
         //println!("{} {:?} {}", index, self.nodes[&index].value, level);
         let mut c_id = index;
         let mut sum_width = 0;
         loop {
             if let Some(r_id) = self.nodes[c_id].next {
                 let right = &self.nodes[r_id];
-                if value >= right.value.unwrap() {
+                if &value >= right.value.as_ref().unwrap() {
                     sum_width += self.nodes[c_id].width;
                     c_id = r_id;
                 }
@@ -42,7 +44,7 @@ impl<T: Ord + Copy + std::fmt::Debug> SkipList<T>
         }
 
         let (a_id, a_width) = if let Some(b_id) = self.nodes[c_id].down {
-            self.h_insert(b_id, value, level.max(1) - 1)
+            self.h_insert(b_id, value.clone(), level.max(1) - 1)
         }
         else {
             (None, 1)
@@ -56,8 +58,8 @@ impl<T: Ord + Copy + std::fmt::Debug> SkipList<T>
                 down: a_id,
             };
 
-            let n_id = if let Some(f_idx) = self.free {
-                self.free = self.nodes[f_idx].next;
+            let n_id = if let Some(f_idx) = self.free_head {
+                self.free_head = self.nodes[f_idx].next;
                 self.nodes[f_idx] = n_node;
                 f_idx
             }
@@ -100,7 +102,7 @@ impl<T: Ord + Copy + std::fmt::Debug> SkipList<T>
         SkipList {
             max_level: max_level,
             nodes: nodes,
-            free: None,
+            free_head: None,
             rnd_st: 88172645463325252,
         }
     }
@@ -110,7 +112,7 @@ impl<T: Ord + Copy + std::fmt::Debug> SkipList<T>
         let level = self.rnd_st.trailing_zeros() as usize;
 
         //println!("{:?} {}", value, level);
-        let (_, width) = self.h_insert(0, value, self.max_level.max(level) - level);
+        let (_, width) = self.h_insert(0, Rc::new(value), self.max_level.max(level) - level);
         width - 1
     }
     fn len(&self) -> usize {
@@ -123,7 +125,22 @@ impl<T: Ord + Copy + std::fmt::Debug> SkipList<T>
         sum_width += self.nodes[c_id].width;
         sum_width
     }
-    // fn search(&self, x: &T) -> Result<usize, usize>
+    /*
+    fn search(&self, x: &T) -> Result<usize, usize> {
+        let mut c_id = 0;
+        let mut sum_width = 0;
+        loop {
+            if let Some(r_id) = self.nodes[c_id].next {
+                let right = &self.nodes[r_id];
+                if x >= &right.value.unwrap() {
+                    sum_width += self.nodes[c_id].width;
+                    c_id = r_id;
+                }
+            }
+            break;
+        }
+    }
+    */
     // fn remove(&mut self, index: usize) -> T
     // Debug
     // fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error>

@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{ops::Index, rc::Rc};
 
 //#############################################################################
 
@@ -20,7 +20,39 @@ struct SkipList<T>
     rnd_st: u64,
 }
 
-impl<T: Ord + std::fmt::Debug> SkipList<T>
+impl<T> SkipList<T>
+{
+    fn new() -> SkipList<T> {
+        let max_level = 32;
+        let mut nodes = Vec::new();
+        for i in 0..=max_level {
+            nodes.push(SkipNode {
+                value: None,
+                width: 0,
+                next: None,
+                down: if i < max_level {Some(i + 1)} else {None},
+            });
+        }
+        SkipList {
+            max_level: max_level,
+            nodes: nodes,
+            free_head: None,
+            rnd_st: 88172645463325252,
+        }
+    }
+    fn len(&self) -> usize {
+        let mut c_id = 0;
+        let mut sum_width = 0;
+        while let Some(r_id) = self.nodes[c_id].next {
+            sum_width += self.nodes[c_id].width;
+            c_id = r_id;
+        }
+        sum_width += self.nodes[c_id].width;
+        sum_width
+    }
+}
+
+impl<T: Ord> SkipList<T>
 {
     fn h_xorshift64(state: u64) -> u64 {
         let state = state ^ (state << 13);
@@ -88,24 +120,6 @@ impl<T: Ord + std::fmt::Debug> SkipList<T>
         }
     }
     //
-    fn new() -> SkipList<T> {
-        let max_level = 32;
-        let mut nodes = Vec::new();
-        for i in 0..=max_level {
-            nodes.push(SkipNode {
-                value: None,
-                width: 0,
-                next: None,
-                down: if i < max_level {Some(i + 1)} else {None},
-            });
-        }
-        SkipList {
-            max_level: max_level,
-            nodes: nodes,
-            free_head: None,
-            rnd_st: 88172645463325252,
-        }
-    }
     fn insert(&mut self, value: T) -> usize {
         self.rnd_st = Self::h_xorshift64(self.rnd_st);
 
@@ -115,16 +129,10 @@ impl<T: Ord + std::fmt::Debug> SkipList<T>
         let (_, width) = self.h_insert(0, Rc::new(value), self.max_level.max(level) - level);
         width - 1
     }
-    fn len(&self) -> usize {
-        let mut c_id = 0;
-        let mut sum_width = 0;
-        while let Some(r_id) = self.nodes[c_id].next {
-            sum_width += self.nodes[c_id].width;
-            c_id = r_id;
-        }
-        sum_width += self.nodes[c_id].width;
-        sum_width
-    }
+}
+
+impl<T: Ord> SkipList<T>
+{
     fn search(&self, x: &T) -> Result<usize, usize> {
         let mut c_id = 0;
         let mut sum_width = 0;
@@ -156,13 +164,73 @@ impl<T: Ord + std::fmt::Debug> SkipList<T>
         }
         Err(sum_width)
     }
-    // fn remove(&mut self, index: usize) -> Option<T>
-    // Debug
-    // fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error>
-    // Index
-    // fn index(&self, index: I) -> &<Vec<T, A> as Index<I>>::Output
-    // fn iter(&self) -> Iter<'_, T>
 }
+
+impl<T> Index<usize> for SkipList<T>
+{
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        let mut c_id = 0;
+        let mut sum_width = 0;
+        loop {
+            //println!("{}", c_id);
+            if index + 1 == sum_width {
+                return self.nodes[c_id].value.as_ref().unwrap();
+            }
+            else {
+                if index + 1 >= sum_width + self.nodes[c_id].width {
+                    if let Some(r_id) = self.nodes[c_id].next {
+                        sum_width += self.nodes[c_id].width;
+                        c_id = r_id;
+                        continue;
+                    }
+                }
+                if let Some(b_id) = self.nodes[c_id].down {
+                    c_id = b_id;
+                    continue;
+                }
+                panic!("Index:{} not found", index);
+            }
+        }
+    }
+}
+
+struct SkipListIter<'a, T>
+{
+    nodes: &'a[SkipNode<T>],
+    c_id: usize,
+}
+
+impl<'a, T> Iterator for SkipListIter<'a, T>
+{
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<&'a T> {
+        if let Some(n_id) = self.nodes[self.c_id].next {
+            self.c_id = n_id;
+            Some(self.nodes[self.c_id].value.as_ref().unwrap())
+        }
+        else {
+            None
+        }
+    }
+}
+
+impl<T> SkipList<T>
+{
+    fn iter(&self) -> SkipListIter<'_, T> {
+        SkipListIter {
+            nodes: &self.nodes,
+            c_id: self.max_level,
+        }
+    }
+}
+
+// fn remove(&mut self, index: usize) -> Option<T>
+// fn remove<Q>(&mut self, value: &Q) -> bool
+// Debug
+// fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error>
 
 //#############################################################################
 
@@ -180,4 +248,12 @@ fn test_skip_list() {
     assert_eq!(s.search(&25), Err(2));
     assert_eq!(s.search(&50), Ok(4));
     assert_eq!(s.search(&55), Err(5));
+    assert_eq!(s[0], 10);
+    assert_eq!(s[1], 20);
+    assert_eq!(s[2], 30);
+    assert_eq!(s[3], 40);
+    assert_eq!(s[4], 50);
+    for (i, &v) in s.iter().enumerate() {
+        assert_eq!(v, (i + 1) as u32 * 10);
+    }
 }

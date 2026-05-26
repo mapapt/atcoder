@@ -11,7 +11,6 @@ struct SkipNode<T>
     down: Option<usize>,
 }
 
-#[derive(Debug)]
 struct SkipList<T>
 {
     max_level: usize,
@@ -227,10 +226,15 @@ impl<T> SkipList<T>
     }
 }
 
+impl<T: std::fmt::Debug> std::fmt::Debug for SkipList<T>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_list().entries(self.iter()).finish()
+    }
+}
+
 // fn remove(&mut self, index: usize) -> Option<T>
 // fn remove<Q>(&mut self, value: &Q) -> bool
-// Debug
-// fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error>
 
 //#############################################################################
 
@@ -256,4 +260,5 @@ fn test_skip_list() {
     for (i, &v) in s.iter().enumerate() {
         assert_eq!(v, (i + 1) as u32 * 10);
     }
+    assert_eq!(format!("{:?}", s), format!("{:?}", [10, 20, 30, 40, 50]));
 }

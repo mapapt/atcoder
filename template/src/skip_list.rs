@@ -123,9 +123,10 @@ impl<T: Ord> SkipList<T>
         self.rnd_st = Self::h_xorshift64(self.rnd_st);
 
         let level = self.rnd_st.trailing_zeros() as usize;
+        let level = level.max(self.max_level - 1);
 
         //println!("{:?} {}", value, level);
-        let (_, width) = self.h_insert(0, Rc::new(value), self.max_level.max(level) - level);
+        let (_, width) = self.h_insert(0, Rc::new(value), self.max_level - level);
         width - 1
     }
 }
@@ -162,6 +163,61 @@ impl<T: Ord> SkipList<T>
             }
         }
         Err(sum_width)
+    }
+}
+
+impl<T: Ord> SkipList<T>
+{
+    fn remove(&mut self, index: usize) -> Option<T> {
+        let mut value = None;
+
+        let mut c_id = 0;
+        let mut sum_width = 0;
+        loop {
+            if index + 1 > sum_width + self.nodes[c_id].width {
+                if let Some(r_id) = self.nodes[c_id].next {
+                    sum_width += self.nodes[c_id].width;
+                    c_id = r_id;
+                    continue;
+                }
+                else {
+                    return None;
+                }
+            }
+            else if index + 1 < sum_width + self.nodes[c_id].width {
+                self.nodes[c_id].width -= 1;
+
+                if let Some(b_id) = self.nodes[c_id].down {
+                    c_id = b_id;
+                    continue;
+                }
+                else {
+                    break;
+                }
+            }
+            else {
+                self.nodes[c_id].width -= 1;
+
+                if let Some(r_id) = self.nodes[c_id].next {
+                    self.nodes[c_id].next = self.nodes[r_id].next;
+                    self.nodes[c_id].width += self.nodes[r_id].width;
+                    value = self.nodes[r_id].value.take();
+
+                    self.nodes[r_id].next = self.free_head;
+                    self.free_head = Some(r_id);
+                }
+
+                if let Some(b_id) = self.nodes[c_id].down {
+                    c_id = b_id;
+                    continue;
+                }
+                else {
+                    break;
+                }
+            }
+        }
+
+        Rc::into_inner(value.unwrap())
     }
 }
 
@@ -233,9 +289,6 @@ impl<T: std::fmt::Debug> std::fmt::Debug for SkipList<T>
     }
 }
 
-// fn remove(&mut self, index: usize) -> Option<T>
-// fn remove<Q>(&mut self, value: &Q) -> bool
-
 //#############################################################################
 
 #[test]
@@ -261,4 +314,11 @@ fn test_skip_list() {
         assert_eq!(v, (i + 1) as u32 * 10);
     }
     assert_eq!(format!("{:?}", s), format!("{:?}", [10, 20, 30, 40, 50]));
+
+    assert_eq!(s.remove(2), Some(30)); // 10,20,40,50
+    assert_eq!(s.remove(3), Some(50)); // 10,20,40
+    assert_eq!(s.remove(0), Some(10)); // 20,40
+    assert_eq!(s.remove(1), Some(40)); // 20
+    assert_eq!(s.len(), 1);
+    assert_eq!(format!("{:?}", s), format!("{:?}", [20]));
 }

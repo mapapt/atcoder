@@ -106,58 +106,55 @@ fn main() {
     let h: usize = io.next();
     let w: usize = io.next();
 
-    let mut v = HashSet::new();
-    let mut q = VecDeque::new();
+    let mut g0 = vec![vec![false; w]; h];
     for i in 0..h {
         let s = io.next_string(); // String
         for (j, c) in s.char_indices() {
             match c {
                 '#' => {
-                    v.insert((i, j));
-                    for di in -1..=1 {
-                        for dj in -1..=1 {
-                            let ni = i as isize + di;
-                            let nj = j as isize + dj;
-                            if ni >= 0 && nj >= 0 && ni < h as isize && nj < w as isize {
-                                q.push_back((ni as usize, nj as usize, true));
-                            }
-                        }
-                    }
+                    g0[i][j] = true;
                 },
                 _ => {}
             }
         }
     }
 
-    let mut g;
-    if v.len() > 0 && v.len() < h * w {
-        g = vec![vec![false; w]; h];
-        while let Some((i, j, f)) = q.pop_front() {
-            if !v.contains(&(i, j)) {
-                debug!(i, j, f);
-                v.insert((i, j));
-                g[i][j] = f;
+    let mut q = VecDeque::new();
+    for i in 0..h {
+        for j in 0..w {
+            if !g0[i][j] {
                 for di in -1..=1 {
                     for dj in -1..=1 {
                         let ni = i as isize + di;
                         let nj = j as isize + dj;
-                        if ni >= 0 && nj >= 0 && ni < h as isize && nj < w as isize {
-                            q.push_back((ni as usize, nj as usize, !f));
+                        if ni >= 0 && nj >= 0 && ni < h as isize && nj < w as isize && g0[ni as usize][nj as usize] {
+                            q.push_back((i, j, 0));
                         }
                     }
                 }
             }
         }
     }
-    else {
-        g = vec![vec![true; w]; h];
+
+    let mut g1 = vec![vec![usize::MAX; w]; h];
+    while let Some((i, j, c)) = q.pop_front() {
+        if g1[i][j] > c {
+            g1[i][j] = c;
+            for di in -1..=1 {
+                for dj in -1..=1 {
+                    let ni = i as isize + di;
+                    let nj = j as isize + dj;
+                    if ni >= 0 && nj >= 0 && ni < h as isize && nj < w as isize {
+                        q.push_back((ni as usize, nj as usize, c + 1));
+                    }
+                }
+            }
+        }
     }
-    debug!(g);
-    debug!(v.len(), h * w);
 
     for i in 0..h {
         for j in 0..w {
-            print!("{}", if g[i][j] {'.'} else {'#'});
+            print!("{}", if g1[i][j] == usize::MAX || g1[i][j] % 2 == 0 {'.'} else {'#'});
         }
         println!();
     }

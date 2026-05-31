@@ -123,7 +123,7 @@ impl<T: Ord> SkipList<T>
         self.rnd_st = Self::h_xorshift64(self.rnd_st);
 
         let level = self.rnd_st.trailing_zeros() as usize;
-        let level = level.max(self.max_level - 1);
+        let level = level.min(self.max_level - 1);
 
         //println!("{:?} {}", value, level);
         let (_, width) = self.h_insert(0, Rc::new(value), self.max_level - level);

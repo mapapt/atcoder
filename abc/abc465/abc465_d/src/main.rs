@@ -105,32 +105,21 @@ fn main() {
 
     let t: usize = io.next();
     for _ in 0..t {
-        let x: u64 = io.next();
-        let y: u64 = io.next();
+        let mut x: u64 = io.next();
+        let mut y: u64 = io.next();
         let k: u64 = io.next();
 
-        let mut v = BTreeSet::new();
-        let mut q = VecDeque::new();
-        q.push_back((x, x, 0));
-        while let Some((from, to, cnt)) = q.pop_back() {
-            //debug!(from, to, cnt);
-            //assert!(cnt < 10);
-            if !v.contains(&(from, to)) {
-                v.insert((from, to));
-                if from <= y && y <= to {
-                    io.put(cnt);
-                    io.putn();
-                    break;
-                }
-                else {
-                    q.push_front((from / k, to / k, cnt + 1));
-                    if to < y {
-                        //q.push_front((from * k, to * k + k - 1, cnt + 1));
-                        let n_from = from.saturating_mul(k);
-                        let n_to = to.saturating_mul(k).saturating_add(k - 1);
-                        q.push_front((n_from, n_to, cnt + 1));
-                    }
-                }
+        for i in 0.. {
+            if x < y {
+                y /= k;
+            }
+            else if x > y {
+                x /= k;
+            }
+            else {
+                io.put(i);
+                io.putn();
+                break;
             }
         }
     }

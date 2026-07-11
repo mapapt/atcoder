@@ -71,9 +71,9 @@ impl<'a> StdIo<'a> {
     fn put<T>(&mut self, val: T)
     where T: std::fmt::Display {
         if self.delim != '\0' {
-            print!("{}", self.delim);
+            std::io::stdout().write_fmt(format_args!("{}", self.delim)).unwrap();
         }
-        print!("{}", val);
+        std::io::stdout().write_fmt(format_args!("{}", val)).unwrap();
         self.delim = ' ';
     }
     fn puti<A, T>(&mut self, val: A)
@@ -83,8 +83,8 @@ impl<'a> StdIo<'a> {
         }
     }
     fn putn(&mut self) {
-        println!();
-        let _ = std::io::stdout().flush();
+        std::io::stdout().write_fmt(format_args!("\n")).unwrap();
+        std::io::stdout().flush().unwrap();
         self.delim = '\0';
     }
     fn puty(&mut self, yes: bool) {
@@ -103,11 +103,11 @@ impl<'a> StdIo<'a> {
 fn main() {
     let mut placeholder = String::new();
     let mut io = StdIo::new_line(&mut placeholder);
-    let n: isize = io.next();
+    let n: usize = io.next();
 
-    let mut ans = 0_isize;
-    let mut l = 1_isize;
-    let mut r = 2_isize;
+    let mut ans = 0;
+    let mut l = 1;
+    let mut r = 2;
     loop {
         io.put('?');
         io.put(l);
@@ -119,23 +119,34 @@ fn main() {
         let s = io.next_string(); // String
 
         if s == "Yes" {
-            ans += 1;
             if r < n {
                 r += 1;
             }
             else {
-                ans += n - l - 1;
-                break;
+                let cnt = r - l;
+                debug!(cnt);
+                ans += cnt;
+
+                l += 1;
+                if l >= r {
+                    r = l + 1;
+                    if r > n {
+                        break;
+                    }
+                }
             }
         }
         else {
-            r -= 1;
+            let cnt = r - l - 1;
+            debug!(cnt);
+            ans += cnt;
+
             l += 1;
             if l >= r {
                 r = l + 1;
-            }
-            if r > n {
-                break;
+                if r > n {
+                    break;
+                }
             }
         }
     }

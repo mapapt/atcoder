@@ -33,7 +33,8 @@ macro_rules! debug {
 
 struct StdIo<'a> {
     tokens: std::str::SplitWhitespace<'a>,
-    delim: char,
+    delim: Option<bool>,
+    en_delim: bool,
 }
 
 #[allow(dead_code)]
@@ -43,7 +44,8 @@ impl<'a> StdIo<'a> {
         std::io::stdin().read_to_string(placeholder).unwrap();
         StdIo {
             tokens: placeholder.split_whitespace(),
-            delim: '\0',
+            delim: None,
+            en_delim: true,
         }
     }
     fn new_line(placeholder: &'a mut String) -> Self {
@@ -51,8 +53,12 @@ impl<'a> StdIo<'a> {
         std::io::stdin().read_line(placeholder).unwrap();
         StdIo {
             tokens: placeholder.split_whitespace(),
-            delim: '\0',
+            delim: None,
+            en_delim: true,
         }
+    }
+    fn en_delim(&mut self, en: bool) {
+        self.en_delim = en;
     }
     fn next_string(&mut self) -> String {
         self.tokens.next().unwrap().to_string()
@@ -70,11 +76,13 @@ impl<'a> StdIo<'a> {
     }
     fn put<T>(&mut self, val: T)
     where T: std::fmt::Display {
-        if self.delim != '\0' {
-            print!("{}", self.delim);
+        if let Some(delim) = self.delim {
+            if delim || self.en_delim {
+                std::io::stdout().write_fmt(format_args!(" ")).unwrap();
+            }
         }
-        print!("{}", val);
-        self.delim = ' ';
+        std::io::stdout().write_fmt(format_args!("{}", val)).unwrap();
+        self.delim = if self.en_delim {Some(true)} else {Some(false)};
     }
     fn puti<A, T>(&mut self, val: A)
     where A: AsRef<[T]>, T: std::fmt::Display {
@@ -83,8 +91,9 @@ impl<'a> StdIo<'a> {
         }
     }
     fn putn(&mut self) {
-        println!();
-        self.delim = '\0';
+        std::io::stdout().write_fmt(format_args!("\n")).unwrap();
+        std::io::stdout().flush().unwrap();
+        self.delim = None;
     }
     fn puty(&mut self, yes: bool) {
         if yes {
@@ -112,7 +121,9 @@ fn main() {
 
     debug!(s, b, n, a);
     io.put(s);
+    io.en_delim(false);
     io.puti(&b);
+    io.en_delim(true);
     io.put(n);
     io.puti(&a);
     io.putn();

@@ -114,86 +114,86 @@ fn main() {
 
     let n: usize = io.next();
     let m: usize = io.next();
-    let mut ab = HashSet::new();
+    let mut ab = BTreeSet::new();
     for _ in 0..m {
         let a: usize = io.next();
         let b: usize = io.next();
         ab.insert((a - 1, b - 1));
     }
-    let ab = ab;
     debug!(ab);
 
-    if ab.len() == 1 {
-        let x = (n - 1) * (n - 2);
-        debug!();
-        io.put(x);
-        io.putn();
-        return;
-    }
+    let ab0 = ab.pop_first().unwrap();
 
-    let p0 = ab.iter().next().unwrap();
-    let p0 = *p0;
-    let mut p1 = None;
-    let mut p2 = None;
+    let c0 = ab0.0;
+    let mut f0 = true;
+    let mut s0 = HashSet::new();
     for abi in ab.iter() {
-        if p0.0 != abi.0 && p0.0 != abi.1 && p0.1 != abi.0 && p0.1 != abi.1 {
-            p1 = Some(*abi);
-            break;
-        }
-        else if p0 != *abi {
-            p2 = Some(*abi);
-        }
-    }
-
-    if let Some(p1) = p1 {
-        let mut s = HashSet::new();
-        s.insert((p0.0, p1.0));
-        s.insert((p0.0, p1.1));
-        s.insert((p0.1, p1.0));
-        s.insert((p0.1, p1.1));
-
-        for abi in ab.iter() {
-            let ss = s.clone();
-            for si in ss.iter() {
-                if si.0 != abi.0 && si.0 != abi.1 && si.1 != abi.0 && si.1 != abi.1 {
-                    s.remove(si);
+        if c0 != abi.0 && c0 != abi.1 {
+            if f0 {
+                f0 = false;
+                s0.insert(abi.0);
+                s0.insert(abi.1);
+            }
+            else {
+                let ss = s0.clone();
+                s0.clear();
+                for &ssi in ss.iter() {
+                    if ssi == abi.0 || ssi == abi.1 {
+                        s0.insert(ssi);
+                    }
                 }
             }
+            debug!(s0);
         }
-        io.put(s.len());
-        io.putn();
-        return;
     }
-    else if let Some(p2) = p2 {
-        let p3 = if p0.0 == p2.0 {
-            (p0.1, p2.1)
-        }
-        else if p0.0 == p2.1 {
-            (p0.1, p2.0)
-        }
-        else if p0.1 == p2.0 {
-            (p0.0, p2.1)
-        }
-        else {
-            (p0.0, p2.0)
-        };
 
-        let x = n - 1;
-        for abi in ab.iter() {
-            if p3.0 != abi.0 && p3.0 != abi.1 && p3.1 != abi.0 && p3.1 != abi.1 {
-                io.put(x);
-                io.putn();
-                return;
+    let c1 = ab0.1;
+    let mut f1 = true;
+    let mut s1 = HashSet::new();
+    for abi in ab.iter() {
+        if c1 != abi.0 && c1 != abi.1 {
+            if f1 {
+                f1 = false;
+                s1.insert(abi.0);
+                s1.insert(abi.1);
             }
+            else {
+                let ss = s1.clone();
+                s1.clear();
+                for &ssi in ss.iter() {
+                    if ssi == abi.0 || ssi == abi.1 {
+                        s1.insert(ssi);
+                    }
+                }
+            }
+            debug!(s1);
         }
-        io.put(x + 1);
+    }
+
+    debug!(f0, f1, s0, s1);
+    if f0 && f1 {
+        io.put((n - 1) + (n - 2));
         io.putn();
-        return;
+    }
+    else if f0 {
+        s1.remove(&c0);
+        io.put((n - 1) + s1.len());
+        io.putn();
+    }
+    else if f1 {
+        s0.remove(&c1);
+        io.put((n - 1) + s0.len());
+        io.putn();
     }
     else {
-        let x = (n - 1) * (n - 2);
-        io.put(x);
+        let mut s01 = HashSet::new();
+        for &s0i in s0.iter() {
+            s01.insert(if c0 < s0i {(c0, s0i)} else {(s0i, c0)});
+        }
+        for &s1i in s1.iter() {
+            s01.insert(if c1 < s1i {(c1, s1i)} else {(s1i, c1)});
+        }
+        io.put(s01.len());
         io.putn();
-        return;
     }
 }

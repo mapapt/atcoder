@@ -115,47 +115,39 @@ fn main() {
 
     let n: usize = io.next();
     let q: usize = io.next();
-    let mut v: VecDeque<HashSet<usize>> = VecDeque::new();
+    let mut v = vec![0; n];
+    let mut set = HashSet::new();
+    let mut ans = 0;
     for _ in 0..q {
         let t: usize = io.next();
         match t {
             1 => {
                 let x: usize = io.next();
+                let x = x - 1;
 
-                let mut idx = usize::MAX;
-                for (i, s) in v.iter().enumerate() {
-                    if s.contains(&x) {
-                        idx = i;
-                    }
-                }
+                ans = ans ^ v[x];
+                v[x] += 1;
+                ans = ans ^ v[x];
 
-                if idx == usize::MAX {
-                    if v.is_empty() {
-                        v.push_back(HashSet::new());
-                    }
-                    v[0].insert(x);
-                }
-                else {
-                    v.get_mut(idx).unwrap().remove(&x);
-                    while idx + 1 >= v.len() {
-                        v.push_back(HashSet::new());
-                    }
-                    v.get_mut(idx + 1).unwrap().insert(x);
-                }
+                set.insert(x);
             },
             _ => {
-                if !v.is_empty() {
-                    v.pop_front();
+                let mut r = Vec::new();
+                for &i in set.iter() {
+                    ans = ans ^ v[i];
+                    v[i] -= 1;
+                    ans = ans ^ v[i];
+
+                    if v[i] == 0 {
+                        r.push(i);
+                    }
+                }
+                for i in r {
+                    set.remove(&i);
                 }
             },
         }
 
-        let mut ans = 0;
-        for (i, s) in v.iter().enumerate() {
-            if s.len() % 2 == 1 {
-                ans = ans ^ (i + 1);
-            }
-        }
         io.put(ans);
         io.putn();
     }

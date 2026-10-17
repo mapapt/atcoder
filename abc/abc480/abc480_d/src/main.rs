@@ -125,6 +125,14 @@ fn main() {
     }
     debug!(suma);
 
+    let mut sumb = Vec::new();
+    let mut sum = 0;
+    for sumai in suma.iter() {
+        sum += sumai;
+        sumb.push(sum);
+    }
+    debug!(sumb);
+
     let mut blen = Vec::new();
     let mut len = 0;
     for i in 0..n {
@@ -139,36 +147,23 @@ fn main() {
         let l = l - 1;
         let r = r - 1;
 
-        let lbi = blen.partition_point(|&x| x <= l);
-        let rbi = blen.partition_point(|&x| x <= r);
-        debug!(lbi, rbi);
-
-        let ls = l - if lbi > 0 {blen[lbi - 1]} else {0};
-        let le = lbi;
-        debug!(ls, le);
-
-        let rs = 0;
-        let re = r - if rbi > 0 {blen[rbi - 1]} else {0};
-        debug!(rs, re);
-
-        let mut ans;
-
-        if lbi == rbi {
-            ans = suma[re + 1] - suma[ls];
+        let la = if l > 0 {
+            let l = l - 1;
+            let lbi = blen.partition_point(|&x| x <= l);
+            let li = l - if lbi > 0 {blen[lbi - 1]} else {0};
+            let la = sumb[lbi] + suma[li + 1];
+            la
         }
         else {
-            ans = (suma[le + 1] - suma[ls]) + (suma[re + 1] - suma[rs]);
-            if rbi - lbi > 1 {
-                let cbi = (rbi + lbi) / 2;
-                debug!(rbi - lbi, cbi);
-                if (rbi - lbi) % 2 == 0 {
-                    ans += suma[cbi + 1] * ((rbi - lbi - 1) as i64);
-                }
-                else {
-                    ans += suma[cbi + 1] * ((rbi - lbi - 2) as i64) + suma[rbi];
-                }
-            }
-        }
+            0
+        };
+
+        let rbi = blen.partition_point(|&x| x <= r);
+        let ri = r - if rbi > 0 {blen[rbi - 1]} else {0};
+        let ra = sumb[rbi] + suma[ri + 1];
+
+        debug!(la, ra);
+        let ans = ra - la;
 
         io.put(ans);
         io.putn();

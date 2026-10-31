@@ -1,0 +1,8 @@
+{
+    "folders": [
+        {"path": "abc482_a"},{"path": "abc482_b"},{"path": "abc482_c"},{"path": "abc482_d"},{"path": "abc482_e"},{"path": "abc482_f"},{"path": "abc482_g"},{"path": "template"},
+    ],
+    "settings": {
+        "chat.disableAIFeatures": true
+    }
+}

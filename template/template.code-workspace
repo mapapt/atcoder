@@ -3,6 +3,7 @@
         {"path": "."},
     ],
     "settings": {
-        "chat.disableAIFeatures": true
+        "chat.disableAIFeatures": true,
+        "rust-analyzer.inlayHints.implicitDrops.enable": false,
     }
 }

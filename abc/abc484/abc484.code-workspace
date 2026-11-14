@@ -1,0 +1,9 @@
+{
+    "folders": [
+        {"path": "abc484_a"},{"path": "abc484_b"},{"path": "abc484_c"},{"path": "abc484_d"},{"path": "abc484_e"},{"path": "abc484_f"},{"path": "abc484_g"},{"path": "template"},
+    ],
+    "settings": {
+        "chat.disableAIFeatures": true,
+        "rust-analyzer.inlayHints.implicitDrops.enable": false,
+    }
+}
